@@ -12,14 +12,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TXT\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="TXT\keywords.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TXT\operations.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TXT\Program.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TXT\splitters.txt">
