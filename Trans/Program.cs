@@ -650,7 +650,7 @@ namespace Trans
         static void Main(string[] args)
         {
             TableContainer x = new("TXT/Program.txt");
-            x.LexAnaliz();
+            var res = x.LexAnaliz();
             x.WriteTables();
             x.WriteTokens();
             Console.WriteLine("Hello world");
