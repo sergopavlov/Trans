@@ -13,11 +13,13 @@ namespace Trans
         string Didgits = "0123456789";
         string Operations = "%^!><+=-*";
         string Splitters = " \t\r\n(){};";
+        Dictionary<(int, int), int> priorities = new();
         public ConstantTable keywordsTable;
         public ConstantTable splittersTable;
         public ConstantTable operationsTable;
         public VariableTable constantsTable;
         public VariableTable identificatorsTable;
+        public List<List<(int, int)>> instructions = new();
         public List<(int, int)> Tokens = new List<(int, int)>();
         public bool LexAnaliz()
         {
@@ -62,7 +64,9 @@ namespace Trans
                 bool isleftvariableused = false;
                 bool IsInited = false;
                 int stateoferror = 0;
+                int curleftindex = 0;
                 (int, int) curlefttoken;
+                int instrnum=0;
                 while (Tokens[num] != splittersTable.GetToken("}"))
                 {
                     curVariables.Clear();
@@ -90,7 +94,17 @@ namespace Trans
                             break;
                         }
                     }
+                    else
+                    {
+                        if(identificatorsTable.Find(Tokens[num].Item2).Type==Lexeme.TYPE.None)
+                        {
+                            Console.WriteLine("Неопределенный идентификатор");
+                            res = false;
+                            break;
+                        }
+                    }
                     curlefttoken = Tokens[num];
+                    curleftindex = num;
                     if (ExpressionAnalysys(ref num, ref curVariables, ref isleftvariableused, ref stateoferror, ref IsInited))
                     {
                         if (isleftvariableused && identificatorsTable.Find(Tokens[num].Item2).IsInit == false)
@@ -114,11 +128,66 @@ namespace Trans
                         {
                             identificatorsTable.Find(Tokens[num].Item2).IsInit = true;
                         }
-
+                        //постфиксная запись
+                        Stack<(int, int)> st = new();
+                        Queue<(int, int)> q = new();
+                        int len = num - curleftindex - 1;
+                        for (int i = curleftindex; i < num - 1; i++)
+                        {
+                            if (Tokens[i].Item1 == 4 || Tokens[i].Item1 == 3)
+                            {
+                                q.Enqueue(Tokens[i]);
+                            }
+                            if (Tokens[i].Item1 == 2)
+                            {
+                                if (st.Count == 0 || st.Peek() == splittersTable.GetToken("("))
+                                    st.Push(Tokens[i]);
+                                else
+                                {
+                                    if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                        st.Push(Tokens[i]);
+                                    else
+                                    {
+                                        bool iterate = true;
+                                        do
+                                        {
+                                            q.Enqueue(st.Pop());
+                                            if (st.Count > 0)
+                                            {
+                                                if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                                {
+                                                    iterate = false;
+                                                }
+                                            }
+                                            else
+                                                iterate = false;
+                                        } while (iterate);
+                                    }
+                                }
+                            }
+                            if (Tokens[i] == splittersTable.GetToken("("))
+                                st.Push(Tokens[i]);
+                            if (Tokens[i] == splittersTable.GetToken(")"))
+                            {
+                                while(st.Peek()!=splittersTable.GetToken("("))
+                                {
+                                    q.Enqueue(st.Pop());
+                                }
+                                st.Pop();
+                            }
+                        }
+                        while (st.Count > 0)
+                            q.Enqueue(st.Pop());
+                        instructions.Add(new());
+                        while(q.Count>0)
+                        {
+                            instructions[instrnum].Add(q.Dequeue());
+                        }
+                        instrnum++;
                     }
                     else
                     {
-                        Console.WriteLine("Анюта<3");
+                        Console.WriteLine("ОШИБКА");
                         res = false;
                         break;
                         //разобрать ошибку по состоянию
@@ -148,7 +217,7 @@ namespace Trans
                     IsInited = true;
                 if (SyntaxTable[curstate].Tokens.Contains(curtoken))
                 {
-                    if (SyntaxTable[curstate].accpept)
+                    if (SyntaxTable[curstate].accept)
                     {
                         index++;
                         curtoken = Tokens[index];
@@ -181,7 +250,7 @@ namespace Trans
                 }
                 else
                 {
-                    if (SyntaxTable[curstate].error)
+                    if (SyntaxTable[curstate].erorr)
                     {
                         res = false;
                         stateoferror = curstate;
@@ -302,6 +371,26 @@ namespace Trans
             operationsTable = new ConstantTable("TXT/operations.txt", 2);
             constantsTable = new(3, "../../../TXT/ConstantsTable.txt");
             identificatorsTable = new(4, "../../../TXT/IdentificatorsTable.txt");
+            //инициализация словаря приоритетов
+            priorities.Add(operationsTable.GetToken("+"), 5);
+            priorities.Add(operationsTable.GetToken("-"), 5);
+            priorities.Add(operationsTable.GetToken("*"), 6);
+            priorities.Add(operationsTable.GetToken("/"), 6);
+            priorities.Add(operationsTable.GetToken("%"), 6);
+            priorities.Add(operationsTable.GetToken("^"), 1);
+            priorities.Add(operationsTable.GetToken(">"), 3);
+            priorities.Add(operationsTable.GetToken("<"), 3);
+            priorities.Add(operationsTable.GetToken("<<"), 4);
+            priorities.Add(operationsTable.GetToken(">>"), 4);
+            priorities.Add(operationsTable.GetToken("!="), 2);
+            priorities.Add(operationsTable.GetToken("<="), 3);
+            priorities.Add(operationsTable.GetToken(">="), 3);
+            priorities.Add(operationsTable.GetToken("="), 0);
+            priorities.Add(operationsTable.GetToken("+="), 0);
+            priorities.Add(operationsTable.GetToken("*="), 0);
+            priorities.Add(operationsTable.GetToken("/="), 0);
+            priorities.Add(operationsTable.GetToken("-="), 0);
+            priorities.Add(splittersTable.GetToken("("), -1);
             //инициализация синтаксического анализатора
             string[] Syntaxops = new string[]
             {
@@ -585,13 +674,13 @@ namespace Trans
             }
             foreach (var item in Operations)
             {
-                if (item=='*')
+                if (item == '*')
                 {
-                perehod[(int)State.Commentstar].Add(item, State.Commentstar);
+                    perehod[(int)State.Commentstar].Add(item, State.Commentstar);
                 }
                 else
                 {
-                perehod[(int)State.Commentstar].Add(item, State.Comment2);
+                    perehod[(int)State.Commentstar].Add(item, State.Comment2);
                 }
             }
             foreach (var item in Splitters)
@@ -741,6 +830,17 @@ namespace Trans
             identificatorsTable.WriteToFile();
 
         }
+        public void WriteInstructions()
+        {
+            for (int i = 0; i < instructions.Count; i++)
+            {
+                for (int j = 0; j < instructions[i].Count; j++)
+                {
+                    Console.Write($"{instructions[i][j]} ");
+                }
+                Console.WriteLine();
+            }
+        }
         public void WriteTokens()
         {
             StringBuilder text = new();
@@ -750,12 +850,6 @@ namespace Trans
             }
             File.WriteAllText("../../../TXT/Tokens.txt", text.ToString());
         }
-    }
-
-
-    public class FiniteAutomat
-    {
-
     }
 
     public class Lexeme
@@ -905,8 +999,28 @@ namespace Trans
             }
             File.WriteAllText(path, text.ToString());
         }
-    }
 
+    }
+    public class SyntaxTableElem
+    {
+        public List<(int, int)> Tokens;
+
+        public SyntaxTableElem(List<(int, int)> tokens, int jump, bool accept, bool stack, bool ret, bool erorr)
+        {
+            Tokens = tokens;
+            this.jump = jump;
+            this.accept = accept;
+            this.stack = stack;
+            this.ret = ret;
+            this.erorr = erorr;
+        }
+
+        public int jump { get; set; }
+        public bool accept { get; set; }
+        public bool stack { get; set; }
+        public bool ret { get; set; }
+        public bool erorr { get; set; }
+    }
 
     class Program
     {
@@ -917,7 +1031,8 @@ namespace Trans
             var res1 = x.SyntaxAnaliz();
             x.WriteTables();
             x.WriteTokens();
-            //Console.WriteLine("Hello world");
+            x.WriteInstructions();
+            Console.WriteLine("Hello world");
         }
     }
 }
