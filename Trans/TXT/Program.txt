@@ -2,9 +2,10 @@
 
 int main()
 {
-<<
-  int a = 2;
+
+  int a1 = 2;
   a= a+2;
-  int b = 5/*lasd*/;
+  int b = 5//lasdkлялял;
+  /*всем привет */
   int c = a+b;
 }

@@ -17,7 +17,7 @@ namespace Trans
         public ConstantTable splittersTable = new ConstantTable("TXT/splitters.txt", 1);
         public ConstantTable operationsTable = new ConstantTable("TXT/operations.txt", 2);
         public VariableTable constantsTable = new(3, "../../../TXT/ConstantsTable.txt");
-        public VariableTable identificatorsTable = new(4,"../../../TXT/IdentificatorsTable.txt");
+        public VariableTable identificatorsTable = new(4, "../../../TXT/IdentificatorsTable.txt");
         public List<(int, int)> Tokens = new List<(int, int)>();
         public bool LexAnaliz()
         {
@@ -28,19 +28,19 @@ namespace Trans
             int i = 0;
             do
             {
-                if (!GenerateToken(text,ref i,out curtoken))
+                if (!GenerateToken(text, ref i, out curtoken))
                 {
                     res = false;
                 }
                 else
                 {
-                    if (curtoken!=null)
+                    if (curtoken != null)
                     {
-                        if (curtoken.Value.Item1==5)
+                        if (curtoken.Value.Item1 == 5)
                         {
                             break;
                         }
-                        Tokens.Add(((int,int))curtoken);
+                        Tokens.Add(((int, int))curtoken);
                     }
                 }
             } while (res);
@@ -83,13 +83,20 @@ namespace Trans
             pointer++;
             State curstate = perehod[(int)State.S][curchar];
             StringBuilder curword = new();
-            while (curstate != State.EndInt && curstate != State.EndOperation && curstate != State.EndSplitter && curstate != State.EndId && curstate != State.End && curstate != State.EndSplitter && curstate != State.Fail && curstate != State.EndEnd&&res)
+            while (curstate != State.EndInt && curstate != State.EndOperation && curstate != State.EndSplitter && curstate != State.EndId && curstate != State.End && curstate != State.EndSplitter && curstate != State.Fail && curstate != State.EndEnd && res)
             {
                 curword.Append(curchar);
                 curchar = Text[pointer];
                 if (!AllowedCharacters.Contains(curchar))
                 {
-                    res = false;
+                    if (curstate == State.Comment2 || curstate == State.Comment1)
+                    {
+                        pointer++;
+                    }
+                    else
+                    {
+                        res = false;
+                    }
                 }
                 else
                 {
@@ -330,7 +337,14 @@ namespace Trans
             }
             foreach (var item in Operations)
             {
+                if (item=='*')
+                {
+                perehod[(int)State.Commentstar].Add(item, State.Commentstar);
+                }
+                else
+                {
                 perehod[(int)State.Commentstar].Add(item, State.Comment2);
+                }
             }
             foreach (var item in Splitters)
             {
@@ -491,11 +505,6 @@ namespace Trans
     }
 
 
-    public class FiniteAutomat
-    {
-
-    }
-
     public class Lexeme
     {
         public string Name { get; set; } = String.Empty;
@@ -575,7 +584,7 @@ namespace Trans
         private Dictionary<int, Lexeme> intToLexeme = new();
         private int counter = 0;
         string path;
-        public VariableTable(int tableId,string path) : base(tableId)
+        public VariableTable(int tableId, string path) : base(tableId)
         {
             this.path = path;
         }
