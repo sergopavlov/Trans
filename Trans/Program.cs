@@ -66,7 +66,7 @@ namespace Trans
                 int stateoferror = 0;
                 int curleftindex = 0;
                 (int, int) curlefttoken;
-                int instrnum=0;
+                int instrnum = 0;
                 while (Tokens[num] != splittersTable.GetToken("}"))
                 {
                     curVariables.Clear();
@@ -96,7 +96,7 @@ namespace Trans
                     }
                     else
                     {
-                        if(identificatorsTable.Find(Tokens[num].Item2).Type==Lexeme.TYPE.None)
+                        if (identificatorsTable.Find(Tokens[num].Item2).Type == Lexeme.TYPE.None)
                         {
                             Console.WriteLine("Неопределенный идентификатор");
                             res = false;
@@ -126,64 +126,68 @@ namespace Trans
                         }
                         if (IsInited)
                         {
-                            identificatorsTable.Find(Tokens[num].Item2).IsInit = true;
+                            identificatorsTable.Find(Tokens[curleftindex].Item2).IsInit = true;
                         }
                         //постфиксная запись
-                        Stack<(int, int)> st = new();
-                        Queue<(int, int)> q = new();
-                        int len = num - curleftindex - 1;
-                        for (int i = curleftindex; i < num - 1; i++)
+                        if (IsInited)
                         {
-                            if (Tokens[i].Item1 == 4 || Tokens[i].Item1 == 3)
+                            Stack<(int, int)> st = new();
+                            Queue<(int, int)> q = new();
+                            int len = num - curleftindex - 1;
+                            for (int i = curleftindex; i < num - 1; i++)
                             {
-                                q.Enqueue(Tokens[i]);
-                            }
-                            if (Tokens[i].Item1 == 2)
-                            {
-                                if (st.Count == 0 || st.Peek() == splittersTable.GetToken("("))
-                                    st.Push(Tokens[i]);
-                                else
+                                if (Tokens[i].Item1 == 4 || Tokens[i].Item1 == 3)
                                 {
-                                    if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                    q.Enqueue(Tokens[i]);
+                                }
+                                if (Tokens[i].Item1 == 2)
+                                {
+                                    if (st.Count == 0 || st.Peek() == splittersTable.GetToken("("))
                                         st.Push(Tokens[i]);
                                     else
                                     {
-                                        bool iterate = true;
-                                        do
+                                        if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                            st.Push(Tokens[i]);
+                                        else
                                         {
-                                            q.Enqueue(st.Pop());
-                                            if (st.Count > 0)
+                                            bool iterate = true;
+                                            do
                                             {
-                                                if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                                q.Enqueue(st.Pop());
+                                                if (st.Count > 0)
                                                 {
-                                                    iterate = false;
+                                                    if (priorities[st.Peek()] < priorities[Tokens[i]])
+                                                    {
+                                                        iterate = false;
+                                                    }
                                                 }
-                                            }
-                                            else
-                                                iterate = false;
-                                        } while (iterate);
+                                                else
+                                                    iterate = false;
+                                            } while (iterate);
+                                        }
                                     }
                                 }
-                            }
-                            if (Tokens[i] == splittersTable.GetToken("("))
-                                st.Push(Tokens[i]);
-                            if (Tokens[i] == splittersTable.GetToken(")"))
-                            {
-                                while(st.Peek()!=splittersTable.GetToken("("))
+                                if (Tokens[i] == splittersTable.GetToken("("))
+                                    st.Push(Tokens[i]);
+                                if (Tokens[i] == splittersTable.GetToken(")"))
                                 {
-                                    q.Enqueue(st.Pop());
+                                    while (st.Peek() != splittersTable.GetToken("("))
+                                    {
+                                        q.Enqueue(st.Pop());
+                                    }
+                                    st.Pop();
                                 }
-                                st.Pop();
                             }
+                            while (st.Count > 0)
+                                q.Enqueue(st.Pop());
+                            instructions.Add(new());
+                            while (q.Count > 0)
+                            {
+                                instructions[instrnum].Add(q.Dequeue());
+                            }
+                            instrnum++;
                         }
-                        while (st.Count > 0)
-                            q.Enqueue(st.Pop());
-                        instructions.Add(new());
-                        while(q.Count>0)
-                        {
-                            instructions[instrnum].Add(q.Dequeue());
-                        }
-                        instrnum++;
+
                     }
                     else
                     {
@@ -280,6 +284,7 @@ namespace Trans
             Operation3,//одно/двусимвольные с =
             Operation4,//!
             Operation5,//после двухсимвольного
+            Operation6,//^ %
             Empty,//пробел ентер
             EndInt,
             EndId,
@@ -289,7 +294,7 @@ namespace Trans
             EndEnd,
             Fail
         }
-        static int countofstates = 17;
+        static int countofstates = 18;
         Dictionary<char, State>[] perehod = new Dictionary<char, State>[countofstates];
         public bool GenerateToken(string Text, ref int pointer, out (int, int)? token)
         {
@@ -475,7 +480,9 @@ namespace Trans
 
             };
             SyntaxTable[22].Tokens.Add(splittersTable.GetToken(";"));
+            SyntaxTable[22].Tokens.Add(splittersTable.GetToken(")"));
             SyntaxTable[24].Tokens.Add(splittersTable.GetToken(";"));
+            SyntaxTable[24].Tokens.Add(splittersTable.GetToken(")"));
             foreach (var item in Syntaxops)
             {
                 SyntaxTable[22].Tokens.Add(operationsTable.GetToken(item));
@@ -497,8 +504,8 @@ namespace Trans
             {
                 perehod[(int)State.S].Add(item, State.Int);
             }
-            perehod[(int)State.S].Add('%', State.EndOperation);
-            perehod[(int)State.S].Add('^', State.EndOperation);
+            perehod[(int)State.S].Add('%', State.Operation6);
+            perehod[(int)State.S].Add('^', State.Operation6);
             perehod[(int)State.S].Add('!', State.Operation4);
             perehod[(int)State.S].Add('>', State.Operation1);
             perehod[(int)State.S].Add('<', State.Operation2);
@@ -823,6 +830,25 @@ namespace Trans
             }
             perehod[(int)State.Operation5].Add('/', State.Fail);
             perehod[(int)State.Operation5].Add('\0', State.Fail);
+            //operation6
+            foreach (var item in Didgits)
+            {
+                perehod[(int)State.Operation6].Add(item, State.EndOperation);
+            }
+            foreach (var item in Letters)
+            {
+                perehod[(int)State.Operation6].Add(item, State.EndOperation);
+            }
+            foreach (var item in Operations)
+            {
+                perehod[(int)State.Operation6].Add(item, State.Fail);
+            }
+            foreach (var item in Splitters)
+            {
+                perehod[(int)State.Operation6].Add(item, State.EndOperation);
+            }
+            perehod[(int)State.Operation6].Add('/', State.EndOperation);
+            perehod[(int)State.Operation6].Add('\0', State.EndOperation);
         }
         public void WriteTables()
         {
@@ -849,6 +875,205 @@ namespace Trans
                 text.Append($"{item.Item1} {item.Item2}\n");
             }
             File.WriteAllText("../../../TXT/Tokens.txt", text.ToString());
+        }
+        public void WriteAssembler()
+        {
+            int markcounter = 0;
+            string path = "../../../TXT/Code.asm";
+            using (FileStream fs = File.OpenWrite(path))
+            {
+                AddText(fs, ".686\n.model flat\n");
+                AddText(fs, ".data\n");
+                foreach (var item in identificatorsTable.GetIdList())
+                {
+                    AddText(fs, $"_{identificatorsTable.Find(item).Name} dd ?\n");
+                }
+                AddText(fs, ".code\n");
+
+                AddText(fs, "main proc\n");
+                foreach (var item in instructions)
+                {
+                    var variable = item[0];
+                    int n = item.Count - 1;
+                    for (int i = 1; i < n; i++)
+                    {
+                        switch (item[i].Item1)
+                        {
+                            case 3:
+                                AddText(fs, $"push {constantsTable.Find(item[i].Item2).Name}\n");
+                                break;
+                            case 4:
+                                AddText(fs, $"push _{identificatorsTable.Find(item[i].Item2).Name}\n");
+                                break;
+                            case 2:
+                                AddText(fs, $"pop eax\n");
+                                AddText(fs, $"pop ebx\n");
+                                switch (item[i].Item2)
+                                {
+                                    case 0://+
+                                        AddText(fs, $"add eax,ebx\n");
+                                        AddText(fs, $"push eax\n");
+                                        break;
+                                    case 1://-
+                                        AddText(fs, $"sub eax,ebx\n");
+                                        AddText(fs, $"push eax\n");
+                                        break;
+                                    case 2://*
+                                        AddText(fs, $"mul ebx\n");
+                                        AddText(fs, $"push eax\n");
+                                        break;
+                                    case 3:///
+                                        AddText(fs, $"div ebx\n");
+                                        AddText(fs, $"push eax\n");
+                                        break;
+                                    case 4://%
+                                        AddText(fs, $"div ebx\n");
+                                        AddText(fs, $"push edx\n");
+                                        break;
+                                    case 5://^
+                                        AddText(fs, $"xor eax,ebx\n");
+                                        AddText(fs, $"push eax\n");
+                                        break;
+                                    case 6://>
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"jb mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    case 7://<
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"jl mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    case 9://<<
+                                        AddText(fs, $"mov ecx ebx\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"mov ebx 2\n");
+                                        AddText(fs, $"mul ebx\n");
+                                        AddText(fs, $"loop mark{markcounter}\n");
+                                        AddText(fs, $"push eax\n");
+                                        markcounter++;
+                                        break;
+                                    case 10://>>
+                                        break;
+                                    case 11://==
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"je mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    case 12://!=
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"jne mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    case 13://>=
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"jbe mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    case 14://<=
+                                        AddText(fs, $"cmp eax,ebx\n");
+                                        AddText(fs, $"jle mark{markcounter}\n");
+                                        AddText(fs, $"jmp mark{markcounter + 1}\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"push 1\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 1}:\n");
+                                        AddText(fs, $"push 0\n");
+                                        AddText(fs, $"jmp mark{markcounter + 2}\n");
+                                        AddText(fs, $"mark{markcounter + 2}:\n");
+                                        markcounter += 3;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    switch (item[n].Item2)
+                    {
+                        case 8://=
+                            AddText(fs, $"pop _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            break;
+                        case 15://+=
+                            AddText(fs, $"pop ebx\n");
+                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"add eax,ebx\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            break;
+                        case 16://-=
+                            AddText(fs, $"pop ebx\n");
+                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"sub eax,ebx\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            break;
+                        case 17://*=
+                            AddText(fs, $"pop ebx\n");
+                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"mul ebx\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            break;
+                        case 18:///=
+                            AddText(fs, $"pop ebx\n");
+                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"div ebx\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                AddText(fs, "");
+                AddText(fs, "");
+                AddText(fs, "main endp\n");
+                AddText(fs, "end main\n");
+            }
+        }
+        private static void AddText(FileStream fs, string value)
+        {
+            byte[] info = new UTF8Encoding(true).GetBytes(value);
+            fs.Write(info, 0, info.Length);
         }
     }
 
@@ -935,6 +1160,15 @@ namespace Trans
         public VariableTable(int tableId, string path) : base(tableId)
         {
             this.path = path;
+        }
+        public List<int> GetIdList()
+        {
+            List<int> res = new();
+            foreach (var item in intToString)
+            {
+                res.Add(item.Key);
+            }
+            return res;
         }
         public Lexeme Find(string name)
         {
@@ -1032,6 +1266,7 @@ namespace Trans
             x.WriteTables();
             x.WriteTokens();
             x.WriteInstructions();
+            x.WriteAssembler();
             Console.WriteLine("Hello world");
         }
     }
