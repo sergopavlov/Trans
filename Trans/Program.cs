@@ -107,7 +107,7 @@ namespace Trans
                     curleftindex = num;
                     if (ExpressionAnalysys(ref num, ref curVariables, ref isleftvariableused, ref stateoferror, ref IsInited))
                     {
-                        if (isleftvariableused && identificatorsTable.Find(Tokens[num].Item2).IsInit == false)
+                        if (isleftvariableused && identificatorsTable.Find(Tokens[curleftindex].Item2).IsInit == false)
                         {
                             Console.WriteLine("Использование неинициализированной переменной");
                             res = false;
@@ -126,7 +126,7 @@ namespace Trans
                         }
                         if (IsInited)
                         {
-                            identificatorsTable.Find(Tokens[num].Item2).IsInit = true;
+                            identificatorsTable.Find(Tokens[curleftindex].Item2).IsInit = true;
                         }
                         //постфиксная запись
                         Stack<(int, int)> st = new();
@@ -162,6 +162,7 @@ namespace Trans
                                             else
                                                 iterate = false;
                                         } while (iterate);
+                                        st.Push(Tokens[i]);
                                     }
                                 }
                             }
@@ -432,30 +433,31 @@ namespace Trans
                  new SyntaxTableElem(new List<(int, int)>(){ operationsTable.GetToken("*=")},0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){ operationsTable.GetToken("/=")},0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){(3,-1)},22,true,false,false,true),
-                 new SyntaxTableElem(new List<(int, int)>(){},28,false,false,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){},29,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){(4,-1)},24,true,false,false,true),
-                 new SyntaxTableElem(new List<(int, int)>(){},28,false,false,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){},29,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken("(")},26,true,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){(4,-1),(3,-1),splittersTable.GetToken("(")},13,false,true,false,true),
-                 new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")")},0,true,false,true,true),
-                 new SyntaxTableElem(new List<(int, int)>(){ },30,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")"),splittersTable.GetToken(";") },32,false,false,true,true),
-                 new SyntaxTableElem(new List<(int, int)>(){ },33,false,true,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")")},28,true,false,true,true),
+                 new SyntaxTableElem(new List<(int, int)>(){},29,false,false,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){ },31,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")"),splittersTable.GetToken(";") },33,false,false,true,true),
+                 new SyntaxTableElem(new List<(int, int)>(){ },34,false,true,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){(4,-1),(3,-1),splittersTable.GetToken("(")},13,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")"),splittersTable.GetToken(";") },0,false,false,true,true),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },46,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },47,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },48,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("/") },49,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("%") },50,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("^") },51,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">") },52,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<") },53,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<<") },54,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">>") },55,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("!=") },56,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<=") },57,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">=") },58,false,false,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },47,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },48,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },49,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("/") },50,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("%") },51,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("^") },52,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">") },53,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<") },54,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<<") },55,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">>") },56,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("!=") },57,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<=") },58,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">=") },59,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },0,true,false,true,true),
@@ -475,13 +477,21 @@ namespace Trans
 
             };
             SyntaxTable[22].Tokens.Add(splittersTable.GetToken(";"));
+            SyntaxTable[22].Tokens.Add(splittersTable.GetToken(")"));
+            SyntaxTable[22].Tokens.Add(splittersTable.GetToken("("));
             SyntaxTable[24].Tokens.Add(splittersTable.GetToken(";"));
+            SyntaxTable[24].Tokens.Add(splittersTable.GetToken("("));
+            SyntaxTable[24].Tokens.Add(splittersTable.GetToken(")"));
+            SyntaxTable[28].Tokens.Add(splittersTable.GetToken(";"));
+            SyntaxTable[28].Tokens.Add(splittersTable.GetToken("("));
+            SyntaxTable[28].Tokens.Add(splittersTable.GetToken(")"));
             foreach (var item in Syntaxops)
             {
                 SyntaxTable[22].Tokens.Add(operationsTable.GetToken(item));
                 SyntaxTable[24].Tokens.Add(operationsTable.GetToken(item));
+                SyntaxTable[29].Tokens.Add(operationsTable.GetToken(item));
                 SyntaxTable[28].Tokens.Add(operationsTable.GetToken(item));
-                SyntaxTable[30].Tokens.Add(operationsTable.GetToken(item));
+                SyntaxTable[31].Tokens.Add(operationsTable.GetToken(item));
             }
             //инициализация лексического анализатора
             for (int i = 0; i < countofstates; i++)
