@@ -6,6 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TXT\Program.asm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="TXT\Program.asm" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Page Include="TXT\keywords.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
