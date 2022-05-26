@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Trans
@@ -170,7 +171,7 @@ namespace Trans
                                 st.Push(Tokens[i]);
                             if (Tokens[i] == splittersTable.GetToken(")"))
                             {
-                                while(st.Peek()!=splittersTable.GetToken("("))
+                                while (st.Peek() != splittersTable.GetToken("("))
                                 {
                                     q.Enqueue(st.Pop());
                                 }
@@ -180,7 +181,7 @@ namespace Trans
                         while (st.Count > 0)
                             q.Enqueue(st.Pop());
                         instructions.Add(new());
-                        while(q.Count>0)
+                        while (q.Count > 0)
                         {
                             instructions[instrnum].Add(q.Dequeue());
                         }
@@ -1005,6 +1006,14 @@ namespace Trans
                                         markcounter++;
                                         break;
                                     case 10://>>
+                                        AddText(fs, $"mov ecx, ebx\n");
+                                        AddText(fs, $"mark{markcounter}:\n");
+                                        AddText(fs, $"mov ebx, 2\n");
+                                        AddText(fs, $"xor edx,edx\n");
+                                        AddText(fs, $"div ebx\n");
+                                        AddText(fs, $"loop mark{markcounter}\n");
+                                        AddText(fs, $"push eax\n");
+                                        markcounter++;
                                         break;
                                     case 11://==
                                         AddText(fs, $"cmp eax,ebx\n");
@@ -1111,7 +1120,212 @@ namespace Trans
             fs.Write(info, 0, info.Length);
         }
     }
+    public class CheckLL1
+    {
+        public List<Terminal> Terminals;
+        public List<NonTerminal> NonTerminals;
+        public List<Rule> Rules;
+        public void NullStringArray()
+        {
 
+            foreach (var item in Rules)
+            {
+                if (item.RightSide.OfType<Terminal>().Count() > 0)
+                {
+                    item.LeftSide.cannull = NonTerminal.canbenull.no;
+                }
+            }
+            foreach (var item in Rules)
+            {
+                if (item.iseps)
+                {
+                    item.LeftSide.cannull = NonTerminal.canbenull.yes;
+                }
+            }
+            while (NonTerminals.Where((T) => T.cannull == NonTerminal.canbenull.undecided).Count() > 0)
+            {
+                foreach (var rule in Rules.Where((T) => !T.excluded))
+                {
+                    if (rule.RightSide.OfType<Terminal>().Count() > 0 || rule.RightSide.OfType<NonTerminal>().Where((T) => T.cannull == NonTerminal.canbenull.no).Count() > 0 || rule.iseps)
+                    {
+                        rule.excluded = true;
+                        if (rule.LeftSide.cannull == NonTerminal.canbenull.undecided && Rules.Where((T) => !T.excluded && T.LeftSide == rule.LeftSide).Count() == 0)
+                        {
+                            rule.LeftSide.cannull = NonTerminal.canbenull.no;
+                        }
+                    }
+                    int i1 = rule.RightSide.Count;
+                    for (int i = 0; i < i1; i++)
+                    {
+                        if (rule.RightSide[i] is NonTerminal)
+                            if ((rule.RightSide[i] as NonTerminal).cannull == NonTerminal.canbenull.yes)
+                                rule.skipped[i] = true;
+                    }
+
+                    bool flag = true;
+                    foreach (var item in rule.skipped)
+                    {
+                        if (!item)
+                            flag = false;
+                    }
+                    if (flag)
+                    {
+                        rule.LeftSide.cannull = NonTerminal.canbenull.yes;
+                        foreach (var item in Rules)
+                        {
+                            if (item.LeftSide == rule.LeftSide)
+                                item.excluded = true;
+                        }
+                    }
+
+                }
+
+            }
+        }
+        public int[][] PrecedeMatrix;
+        public void GeneratePrecedeMatrix()
+        {
+            int n = NonTerminals.Count;
+            int m = n + Terminals.Count;
+            PrecedeMatrix = new int[n][];
+            for (int i = 0; i < n; i++)
+            {
+                PrecedeMatrix[i] = new int[m];
+            }
+            foreach (var rule in Rules.Where((T) => !T.iseps))
+            {
+                bool flag = true;
+                for (int i = 0; i < rule.RightSide.Count&&flag; i++)
+                {
+                    if (rule.RightSide[i] is NonTerminal)
+                    {
+                        PrecedeMatrix[NonTerminals.IndexOf(rule.LeftSide)][NonTerminals.IndexOf(rule.RightSide[i] as NonTerminal)] = 1;
+                        if ((rule.RightSide[i] as NonTerminal).cannull == NonTerminal.canbenull.no)
+                        {
+                            flag = false;
+                        }
+                    }
+                    else
+                    {
+                        PrecedeMatrix[NonTerminals.IndexOf(rule.LeftSide)][n + Terminals.IndexOf(rule.RightSide[i] as Terminal)] = 1;
+                        flag = false;
+                    }
+                }
+            }
+            bool flag1 = true;
+            while (flag1)
+            {
+                flag1 = false;
+                for (int i = 0; i < n; i++)
+                {
+                    for (int j = 0; j < n; j++)
+                    {
+                        for (int v = 0; v < m; v++)
+                        {
+                            if(PrecedeMatrix[i][j]==1&&PrecedeMatrix[j][v]==1)
+                            {
+                                if (PrecedeMatrix[i][v] == 0)
+                                    flag1 = true;
+                                PrecedeMatrix[i][v] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+            Console.WriteLine("putin");
+        }
+        public int[][] SuccessionMatrix;
+        public void GenerateSuccessionMatrix()
+        {
+            int n = NonTerminals.Count;
+            int m = n + Terminals.Count;
+            SuccessionMatrix = new int[n][];
+            for (int i = 0; i < n; i++)
+            {
+                SuccessionMatrix[i] = new int[m];
+            }
+            foreach (var rule in Rules)
+            {
+
+            }
+        }
+        public CheckLL1(List<Terminal> terminals, List<NonTerminal> nonTerminals, List<Rule> rules)
+        {
+            Terminals = terminals;
+            NonTerminals = nonTerminals;
+            Rules = rules;
+        }
+    }
+    public class Rule
+    {
+        public bool excluded = false;
+        public List<bool> skipped = new();
+        public NonTerminal LeftSide;
+        public List<Term> RightSide;
+
+        public Rule(NonTerminal leftSide, List<Term> rightSide)
+        {
+            LeftSide = leftSide;
+            RightSide = rightSide;
+            foreach (var item in rightSide)
+            {
+                skipped.Add(false);
+            }
+        }
+
+        public bool iseps
+        {
+            get
+            {
+                bool res = false;
+                if (RightSide.Count == 1)
+                {
+                    if (RightSide[0].str == "eps") ;
+                    res = true;
+                }
+                return res;
+            }
+            init { }
+
+        }
+    }
+    public abstract class Term
+    {
+        public Term(string str)
+        {
+            this.str = str;
+        }
+        public override int GetHashCode()
+        {
+            return str.GetHashCode();
+        }
+        public string str { get; init; }
+    }
+    public class Terminal : Term
+    {
+
+        public Terminal(string str) : base(str)
+        {
+        }
+    }
+    public class NonTerminal : Term
+    {
+        public enum canbenull
+        {
+            yes, no, undecided
+        }
+        public canbenull cannull = canbenull.undecided;
+        public NonTerminal(string str) : base(str)
+        {
+
+        }
+    }
+    public class Eps : Term
+    {
+        public Eps() : base("eps")
+        {
+        }
+    }
     public class Lexeme
     {
         public string Name { get; set; } = String.Empty;
@@ -1295,13 +1509,34 @@ namespace Trans
     {
         static void Main(string[] args)
         {
-            TableContainer x = new("TXT/Program.txt");
-            var res = x.LexAnaliz();
-            var res1 = x.SyntaxAnaliz();
-            x.WriteTables();
-            x.WriteTokens();
-            x.WriteInstructions();
-            x.WriteAssembler();
+            //TableContainer x = new("TXT/Program.txt");
+            //var res = x.LexAnaliz();
+            //var res1 = x.SyntaxAnaliz();
+            //x.WriteTables();
+            //x.WriteTokens();
+            //x.WriteInstructions();
+            //x.WriteAssembler();
+            List<Terminal> lterm = new() { new Terminal("a"), new Terminal("c"), new Terminal("d"), new Terminal("e") };
+            List<NonTerminal> lnterm = new() { new NonTerminal("A"), new NonTerminal("X"), new NonTerminal("Y"), new NonTerminal("Z"), new NonTerminal("P"), new NonTerminal("Q"), new NonTerminal("R"), new NonTerminal("S"), new NonTerminal("T"), new NonTerminal("U") };
+            List<Rule> rules = new();
+            Eps eps = new Eps();
+            rules.Add(new Rule(lnterm[0], new List<Term>() { lnterm[1], lnterm[2], lnterm[3] }));
+            rules.Add(new Rule(lnterm[1], new List<Term>() { lnterm[4], lnterm[5] }));
+            rules.Add(new Rule(lnterm[2], new List<Term>() { lnterm[6], lnterm[7] }));
+            rules.Add(new Rule(lnterm[6], new List<Term>() { lnterm[8], lnterm[9] }));
+            rules.Add(new Rule(lnterm[4], new List<Term>() { eps }));
+            rules.Add(new Rule(lnterm[4], new List<Term>() { lterm[0] }));
+            rules.Add(new Rule(lnterm[5], new List<Term>() { lterm[0], lterm[0] }));
+            rules.Add(new Rule(lnterm[5], new List<Term>() { eps }));
+            rules.Add(new Rule(lnterm[7], new List<Term>() { lterm[1], lterm[1] }));
+            rules.Add(new Rule(lnterm[8], new List<Term>() { lterm[2], lterm[2] }));
+            rules.Add(new Rule(lnterm[9], new List<Term>() { lterm[3], lterm[3] }));
+            rules.Add(new Rule(lnterm[3], new List<Term>() { eps }));
+
+
+            CheckLL1 Gram = new(lterm, lnterm, rules);
+            Gram.NullStringArray();
+            Gram.GeneratePrecedeMatrix();
             Console.WriteLine("Hello world");
         }
     }
