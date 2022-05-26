@@ -282,6 +282,7 @@ namespace Trans
             Operation4,//!
             Operation5,//после двухсимвольного
             Operation6,//^ %
+            Operation7,//  /=
             Empty,//пробел ентер
             EndInt,
             EndId,
@@ -385,6 +386,7 @@ namespace Trans
             priorities.Add(operationsTable.GetToken("<<"), 4);
             priorities.Add(operationsTable.GetToken(">>"), 4);
             priorities.Add(operationsTable.GetToken("!="), 2);
+            priorities.Add(operationsTable.GetToken("=="), 2);
             priorities.Add(operationsTable.GetToken("<="), 3);
             priorities.Add(operationsTable.GetToken(">="), 3);
             priorities.Add(operationsTable.GetToken("="), 0);
@@ -408,7 +410,8 @@ namespace Trans
                 ">>",
                 "!=",
                 "<=",
-                ">="
+                ">=",
+                "=="
             };
             SyntaxTable = new SyntaxTableElem[]
             {
@@ -446,19 +449,20 @@ namespace Trans
                  new SyntaxTableElem(new List<(int, int)>(){ },34,false,true,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){(4,-1),(3,-1),splittersTable.GetToken("(")},13,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){splittersTable.GetToken(")"),splittersTable.GetToken(";") },0,false,false,true,true),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },47,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },48,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },49,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("/") },50,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("%") },51,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("^") },52,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">") },53,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<") },54,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<<") },55,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">>") },56,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("!=") },57,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<=") },58,false,false,false,false),
-                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">=") },59,false,false,false,true),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },48,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },49,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },50,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("/") },51,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("%") },52,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("^") },53,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">") },54,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<") },55,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<<") },56,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">>") },57,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("!=") },58,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<=") },59,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">=") },60,false,false,false,false),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("==") },61,false,false,false,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("+") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("-") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("*") },0,true,false,true,true),
@@ -472,6 +476,7 @@ namespace Trans
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("!=") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("<=") },0,true,false,true,true),
                  new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken(">=") },0,true,false,true,true),
+                 new SyntaxTableElem(new List<(int, int)>(){operationsTable.GetToken("==") },0,true,false,true,true),
 
 
 
@@ -578,7 +583,13 @@ namespace Trans
                 if (item == '*')
                     perehod[(int)State.Slash].Add(item, State.Comment2);
                 else
-                    perehod[(int)State.Slash].Add(item, State.EndOperation);
+                {
+                    if (item == '=')
+                        perehod[(int)State.Slash].Add(item, State.Operation7);
+                    else
+                        perehod[(int)State.Slash].Add(item, State.EndOperation);
+
+                }
             }
             foreach (var item in Splitters)
             {
@@ -853,6 +864,25 @@ namespace Trans
             }
             perehod[(int)State.Operation6].Add('/', State.EndOperation);
             perehod[(int)State.Operation6].Add('\0', State.EndOperation);
+            //operation7
+            foreach (var item in Didgits)
+            {
+                perehod[(int)State.Operation7].Add(item, State.EndOperation);
+            }
+            foreach (var item in Letters)
+            {
+                perehod[(int)State.Operation7].Add(item, State.EndOperation);
+            }
+            foreach (var item in Operations)
+            {
+                perehod[(int)State.Operation7].Add(item, State.Fail);
+            }
+            foreach (var item in Splitters)
+            {
+                perehod[(int)State.Operation7].Add(item, State.EndOperation);
+            }
+            perehod[(int)State.Operation7].Add('/', State.EndOperation);
+            perehod[(int)State.Operation7].Add('\0', State.EndOperation);
         }
         public void WriteTables()
         {
@@ -910,8 +940,8 @@ namespace Trans
                                 AddText(fs, $"push _{identificatorsTable.Find(item[i].Item2).Name}\n");
                                 break;
                             case 2:
-                                AddText(fs, $"pop eax\n");
                                 AddText(fs, $"pop ebx\n");
+                                AddText(fs, $"pop eax\n");
                                 switch (item[i].Item2)
                                 {
                                     case 0://+
@@ -926,7 +956,8 @@ namespace Trans
                                         AddText(fs, $"mul ebx\n");
                                         AddText(fs, $"push eax\n");
                                         break;
-                                    case 3:///
+                                    case 3:// /
+                                        AddText(fs, $"xor edx, edx\n");
                                         AddText(fs, $"div ebx\n");
                                         AddText(fs, $"push eax\n");
                                         break;
@@ -940,7 +971,7 @@ namespace Trans
                                         break;
                                     case 6://>
                                         AddText(fs, $"cmp eax,ebx\n");
-                                        AddText(fs, $"jb mark{markcounter}\n");
+                                        AddText(fs, $"jg mark{markcounter}\n");
                                         AddText(fs, $"jmp mark{markcounter + 1}\n");
                                         AddText(fs, $"mark{markcounter}:\n");
                                         AddText(fs, $"push 1\n");
@@ -965,9 +996,9 @@ namespace Trans
                                         markcounter += 3;
                                         break;
                                     case 9://<<
-                                        AddText(fs, $"mov ecx ebx\n");
+                                        AddText(fs, $"mov ecx, ebx\n");
                                         AddText(fs, $"mark{markcounter}:\n");
-                                        AddText(fs, $"mov ebx 2\n");
+                                        AddText(fs, $"mov ebx, 2\n");
                                         AddText(fs, $"mul ebx\n");
                                         AddText(fs, $"loop mark{markcounter}\n");
                                         AddText(fs, $"push eax\n");
@@ -1003,7 +1034,7 @@ namespace Trans
                                         break;
                                     case 13://>=
                                         AddText(fs, $"cmp eax,ebx\n");
-                                        AddText(fs, $"jbe mark{markcounter}\n");
+                                        AddText(fs, $"jge mark{markcounter}\n");
                                         AddText(fs, $"jmp mark{markcounter + 1}\n");
                                         AddText(fs, $"mark{markcounter}:\n");
                                         AddText(fs, $"push 1\n");
@@ -1042,27 +1073,27 @@ namespace Trans
                             break;
                         case 15://+=
                             AddText(fs, $"pop ebx\n");
-                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"mov eax, _{identificatorsTable.Find(variable.Item2).Name}\n");
                             AddText(fs, $"add eax,ebx\n");
-                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name}, eax\n");
                             break;
                         case 16://-=
                             AddText(fs, $"pop ebx\n");
-                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"mov eax, _{identificatorsTable.Find(variable.Item2).Name}\n");
                             AddText(fs, $"sub eax,ebx\n");
-                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name}, eax\n");
                             break;
                         case 17://*=
                             AddText(fs, $"pop ebx\n");
-                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"mov eax, _{identificatorsTable.Find(variable.Item2).Name}\n");
                             AddText(fs, $"mul ebx\n");
-                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name}, eax\n");
                             break;
                         case 18:///=
                             AddText(fs, $"pop ebx\n");
-                            AddText(fs, $"mov eax _{identificatorsTable.Find(variable.Item2).Name}\n");
+                            AddText(fs, $"mov eax, _{identificatorsTable.Find(variable.Item2).Name}\n");
                             AddText(fs, $"div ebx\n");
-                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name} eax\n");
+                            AddText(fs, $"mov _{identificatorsTable.Find(variable.Item2).Name}, eax\n");
                             break;
                         default:
                             break;

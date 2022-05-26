@@ -1,16 +1,8 @@
 ﻿int main()
 {
-<<<<<<< HEAD
-  int a =  3 + 2;
-  int b = 1;
-  int c = 2;
-  a = ((a + b)*(c-b)/c);
-}
-=======
 int a = 5;
 int b = 10;
 int c = 18;
-
 int d = ((a+5)*(c-b))/2;
 int e = a%2;
 int f = a>b;
@@ -24,4 +16,3 @@ a-=5;
 c*=2;
 b/=2;
 }
->>>>>>> c0bef19062d83688ece73383a41ba7f48b892c33
