@@ -1195,7 +1195,7 @@ namespace Trans
             foreach (var rule in Rules.Where((T) => !T.iseps))
             {
                 bool flag = true;
-                for (int i = 0; i < rule.RightSide.Count&&flag; i++)
+                for (int i = 0; i < rule.RightSide.Count && flag; i++)
                 {
                     if (rule.RightSide[i] is NonTerminal)
                     {
@@ -1222,7 +1222,7 @@ namespace Trans
                     {
                         for (int v = 0; v < m; v++)
                         {
-                            if(PrecedeMatrix[i][j]==1&&PrecedeMatrix[j][v]==1)
+                            if (PrecedeMatrix[i][j] == 1 && PrecedeMatrix[j][v] == 1)
                             {
                                 if (PrecedeMatrix[i][v] == 0)
                                     flag1 = true;
@@ -1244,7 +1244,24 @@ namespace Trans
             {
                 SuccessionMatrix[i] = new int[m];
             }
-            foreach (var rule in Rules)
+            foreach (var rule in Rules.Where((T) => !T.iseps))
+            {
+                for (int i = 0; i < rule.RightSide.Count - 1; i++)
+                {
+                    if (rule.RightSide[i] is NonTerminal)
+                    {
+                        if (rule.RightSide[i + 1] is NonTerminal)
+                        {
+                            SuccessionMatrix[NonTerminals.IndexOf(rule.RightSide[i] as NonTerminal)][NonTerminals.IndexOf(rule.RightSide[i + 1] as NonTerminal)] = 1;
+                        }
+                        else
+                        {
+                            SuccessionMatrix[NonTerminals.IndexOf(rule.RightSide[i] as NonTerminal)][n + Terminals.IndexOf(rule.RightSide[i + 1] as Terminal)] = 1;
+                        }
+                    }
+                }
+            }
+            foreach (var rule in Rules.Where((T)=>!T.iseps))
             {
 
             }
@@ -1509,34 +1526,34 @@ namespace Trans
     {
         static void Main(string[] args)
         {
-            //TableContainer x = new("TXT/Program.txt");
-            //var res = x.LexAnaliz();
-            //var res1 = x.SyntaxAnaliz();
-            //x.WriteTables();
-            //x.WriteTokens();
-            //x.WriteInstructions();
-            //x.WriteAssembler();
-            List<Terminal> lterm = new() { new Terminal("a"), new Terminal("c"), new Terminal("d"), new Terminal("e") };
-            List<NonTerminal> lnterm = new() { new NonTerminal("A"), new NonTerminal("X"), new NonTerminal("Y"), new NonTerminal("Z"), new NonTerminal("P"), new NonTerminal("Q"), new NonTerminal("R"), new NonTerminal("S"), new NonTerminal("T"), new NonTerminal("U") };
-            List<Rule> rules = new();
-            Eps eps = new Eps();
-            rules.Add(new Rule(lnterm[0], new List<Term>() { lnterm[1], lnterm[2], lnterm[3] }));
-            rules.Add(new Rule(lnterm[1], new List<Term>() { lnterm[4], lnterm[5] }));
-            rules.Add(new Rule(lnterm[2], new List<Term>() { lnterm[6], lnterm[7] }));
-            rules.Add(new Rule(lnterm[6], new List<Term>() { lnterm[8], lnterm[9] }));
-            rules.Add(new Rule(lnterm[4], new List<Term>() { eps }));
-            rules.Add(new Rule(lnterm[4], new List<Term>() { lterm[0] }));
-            rules.Add(new Rule(lnterm[5], new List<Term>() { lterm[0], lterm[0] }));
-            rules.Add(new Rule(lnterm[5], new List<Term>() { eps }));
-            rules.Add(new Rule(lnterm[7], new List<Term>() { lterm[1], lterm[1] }));
-            rules.Add(new Rule(lnterm[8], new List<Term>() { lterm[2], lterm[2] }));
-            rules.Add(new Rule(lnterm[9], new List<Term>() { lterm[3], lterm[3] }));
-            rules.Add(new Rule(lnterm[3], new List<Term>() { eps }));
+            TableContainer x = new("TXT/Program.txt");
+            var res = x.LexAnaliz();
+            var res1 = x.SyntaxAnaliz();
+            x.WriteTables();
+            x.WriteTokens();
+            x.WriteInstructions();
+            x.WriteAssembler();
+            //List<Terminal> lterm = new() { new Terminal("a"), new Terminal("c"), new Terminal("d"), new Terminal("e") };
+            //List<NonTerminal> lnterm = new() { new NonTerminal("A"), new NonTerminal("X"), new NonTerminal("Y"), new NonTerminal("Z"), new NonTerminal("P"), new NonTerminal("Q"), new NonTerminal("R"), new NonTerminal("S"), new NonTerminal("T"), new NonTerminal("U") };
+            //List<Rule> rules = new();
+            //Eps eps = new Eps();
+            //rules.Add(new Rule(lnterm[0], new List<Term>() { lnterm[1], lnterm[2], lnterm[3] }));
+            //rules.Add(new Rule(lnterm[1], new List<Term>() { lnterm[4], lnterm[5] }));
+            //rules.Add(new Rule(lnterm[2], new List<Term>() { lnterm[6], lnterm[7] }));
+            //rules.Add(new Rule(lnterm[6], new List<Term>() { lnterm[8], lnterm[9] }));
+            //rules.Add(new Rule(lnterm[4], new List<Term>() { eps }));
+            //rules.Add(new Rule(lnterm[4], new List<Term>() { lterm[0] }));
+            //rules.Add(new Rule(lnterm[5], new List<Term>() { lterm[0], lterm[0] }));
+            //rules.Add(new Rule(lnterm[5], new List<Term>() { eps }));
+            //rules.Add(new Rule(lnterm[7], new List<Term>() { lterm[1], lterm[1] }));
+            //rules.Add(new Rule(lnterm[8], new List<Term>() { lterm[2], lterm[2] }));
+            //rules.Add(new Rule(lnterm[9], new List<Term>() { lterm[3], lterm[3] }));
+            //rules.Add(new Rule(lnterm[3], new List<Term>() { eps }));
 
 
-            CheckLL1 Gram = new(lterm, lnterm, rules);
-            Gram.NullStringArray();
-            Gram.GeneratePrecedeMatrix();
+            //CheckLL1 Gram = new(lterm, lnterm, rules);
+            //Gram.NullStringArray();
+            //Gram.GeneratePrecedeMatrix();
             Console.WriteLine("Hello world");
         }
     }
