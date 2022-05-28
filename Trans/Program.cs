@@ -1330,6 +1330,16 @@ namespace Trans
                     }
                     if (rule.RightSide[i] is NonTerminal)
                     {
+                        if(i==rule.RightSide.Count-1&&(rule.RightSide[i] as NonTerminal).cannull==NonTerminal.canbenull.yes)
+                        {
+                            for (int j = n; j < m; j++)
+                            {
+                                if (SuccessionMatrix[NonTerminals.IndexOf(rule.RightSide[i] as NonTerminal)][j] == 1)
+                                {
+                                    res.Add(Terminals[j - n]);
+                                }
+                            }
+                        }
                         for (int j = n; j < m; j++)
                         {
                             if (PrecedeMatrix[NonTerminals.IndexOf(rule.RightSide[i] as NonTerminal)][j] == 1)
