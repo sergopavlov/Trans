@@ -1,18 +1,4 @@
 ﻿int main()
 {
-int a = 5;
-int b = 10;
-int c = 18;
-int d = ((a+5)*(c-b))/2;
-int e = a%2;
-int f = a>b;
-int g = a<b;
-int h = a==b;
-int i = a!=c;
-int j = a>=b;
-int k = a<=b;
-a+=b;
-a-=5; 
-c*=2;
-b/=2;
+int c = 1+5 * 2;
 }
